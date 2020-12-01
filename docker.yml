@@ -1,0 +1,52 @@
+- hosts: all
+  tasks:
+          - name: "configuring yum for docker"
+            yum_repository:
+                  name: "docker"
+                  description: "docker yum repo"
+                  baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable"
+                  gpgcheck: no
+
+          - name: "installing docker"
+            package:
+                  name: "docker-ce-18.06.3.ce-3.el7.x86_64"
+                  state: present
+
+          - name: "starting docker service"
+            service:
+                  name: "docker"
+                  state: started
+                  enabled: yes
+
+          - name: "installing python"
+            package:
+                  name: "python36"
+                  state: present
+
+          - name: "installing docker sdk"
+            pip:
+                  name: "docker"
+                  state: present
+
+          - name: "pulling docker image"
+            docker_image:
+                  name: "httpd:latest"
+                  source: pull
+
+          - name: "configuring web service on docker container"
+            docker_container:
+                  name: "webserver"
+                  image: "httpd:latest"
+                  state: present
+                  ports: "8080:80"
+                  volumes: "/var/www/html:/usr/local/apache2/htdocs/"
+
+          - name: "copying html file to container"
+            copy:
+                  src: "web.html"
+                  dest: "/var/www/html/"
+
+          - name: "starting docker container"
+            docker_container:
+                  name: "webserver"
+                  state: started
